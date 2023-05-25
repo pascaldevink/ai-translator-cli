@@ -1,22 +1,12 @@
 {
-    "addToNew": "Add to new",
-    "addToWorkspace": "Add to workspace:",
-    "ariaLabel": {
-      "buttonBadge": "badge",
-      "select": "Select",
-      "selected": "Selected: remove from"
+  "bookAvailability": {
+    "geolocation": {
+      "summary": "Unavailable in your region"
     },
-    "header": "Mark as",
-    "inputWithButton": {
-      "create": "Create",
-      "createNew": "Create new"
+    "scheduled": {
+      "summary": "Available until {{date}}"
     },
-    "list": "list",
-    "lists": "lists",
-    "mobileNoContent": {
-      "body": "Create one now to gather all your resources in one place.",
-      "titleBeginning": "You don’t have any {{workspacesOrLists}} yet."
-    },
-    "tooltipLabel": "Remove from"
+    "unavailableLongSummary": "No longer available",
+    "unavailableShortSummary": "Unavailable"
   }
-  
+}
