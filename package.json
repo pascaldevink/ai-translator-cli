@@ -1,0 +1,14 @@
+{
+  "name": "ai-translator-cli",
+  "version": "0.0.1",
+  "description": "CLI tool that ingests JSON with English copy and translates it into the given language",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^10.0.1"
+  }
+}

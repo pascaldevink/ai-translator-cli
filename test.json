@@ -1,0 +1,22 @@
+{
+    "addToNew": "Add to new",
+    "addToWorkspace": "Add to workspace:",
+    "ariaLabel": {
+      "buttonBadge": "badge",
+      "select": "Select",
+      "selected": "Selected: remove from"
+    },
+    "header": "Mark as",
+    "inputWithButton": {
+      "create": "Create",
+      "createNew": "Create new"
+    },
+    "list": "list",
+    "lists": "lists",
+    "mobileNoContent": {
+      "body": "Create one now to gather all your resources in one place.",
+      "titleBeginning": "You don’t have any {{workspacesOrLists}} yet."
+    },
+    "tooltipLabel": "Remove from"
+  }
+  
