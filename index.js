@@ -3,6 +3,7 @@
  * $ ai-translator-cli -i <JSON file to translate> -l <list of languages, comma separated, 2-letter code>
  * Exmaple: ai-translator-cli -i test.json -o {{lang}}_test.json -l es
  */
+const { encode, decode } = require("gpt-3-encoder");
 const { Configuration, OpenAIApi } = require("openai");
 const { program } = require("commander");
 const fs = require("fs");
@@ -20,6 +21,18 @@ async function init() {
   const sourceCopy = fs.readFileSync(options.input, "utf8");
   const languages = options.languages.split(",");
   const languageMap = setupLanguageMap();
+
+  const encoded = encode(sourceCopy);
+  const max_token = 3000;
+  if (encoded.length > max_token) {
+    throw new Error(
+      `JSON exceeding max token length. encoded length: ${encoded.length}`
+    );
+  }
+
+  console.log(`length of string: ${encoded.length}`);
+  const decoded = decode(encoded);
+  console.log("We can decode it back into:\n", decoded);
 
   console.log("Translating JSON to different languages...");
   for (const languageIndex in languages) {
