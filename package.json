@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^10.0.1",
-    "dotenv": "^16.0.3",
+    "gpt-3-encoder": "^1.1.4",
     "openai": "^3.2.1"
   }
 }
