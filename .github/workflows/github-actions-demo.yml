@@ -47,7 +47,7 @@ jobs:
         id: changed-files-specific
         uses: tj-actions/changed-files@v36
         with:
-          files: /test.{json}
+          files: test.json
 
       - name: Run translation if any json file(s) in the docs folder change
         if: steps.changed-files-specific.outputs.any_changed == 'true'
