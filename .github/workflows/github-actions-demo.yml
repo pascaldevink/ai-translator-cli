@@ -38,7 +38,7 @@ jobs:
         uses: tj-actions/changed-files@v36
 
       - name: Run step if any *.json file(s) have changed
-        if: steps.changed-files-excluded.outputs.any_changed == 'true'
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
