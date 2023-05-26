@@ -2,12 +2,6 @@
   "bookAvailability": {
     "geolocation": {
       "summary": "Unavailable in your region"
-    },
-    "scheduled": {
-      "summary": "Available until {{date}}"
-    },
-    "unavailableLongSummary": "No longer available",
-    "unavailableShortSummary": "Unavailable",
-    "test": "Testing github actions"
+    }
   }
 }
