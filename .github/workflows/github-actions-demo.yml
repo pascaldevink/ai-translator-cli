@@ -5,14 +5,13 @@ run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 # Problem is that if there's many PR's i.e. fixing small typos
 on:
   push:
-    branches: [ test ]
+    branches: [test]
 
 jobs:
   build:
-
+    if: ${{ contains(github.event.commits[0].message, '[skip build]') }}
     runs-on: ubuntu-latest
 
-    # don't require node as it's cli?
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x, 20.x]
@@ -27,19 +26,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-      - run: npm ci
-      
-      - name: Run Translation CLI
-      - run: ai-translator-cli -i test.json -o {{lang}}_test.json -l es
-      # - run: npm test
+        run: npm ci
 
-      - name: Commit changes
-      run: |
-        git config --global user.email "no-reply@github.com"
-        git config --global user.name "GitHub Actions"
-        git add {{lang}}_test.json
-        git commit -m "Update {{lang}}_test.json"
-        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-        git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Translation CLI
+        run: ai-translator-cli -i test.json -o {{lang}}_test.json -l es
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply file changes
