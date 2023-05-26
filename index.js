@@ -9,7 +9,6 @@ const { program } = require("commander");
 const fs = require("fs");
 
 async function init() {
-  console.log("Setting up CLI...");
   setupCLI();
   const options = program.opts();
 
@@ -30,16 +29,16 @@ async function init() {
     );
   }
 
-  console.log(`length of string: ${encoded.length}`);
+  log(3, `Number of tokens in source copy: ${encoded.length}`);
   const decoded = decode(encoded);
-  console.log("We can decode it back into:\n", decoded);
+  log(3, "We can decode encoded tokens back into:\n", decoded);
 
-  console.log("Translating JSON to different languages...");
+  log(1, "Translating JSON to different languages...");
   for (const languageIndex in languages) {
     const language = languages[languageIndex];
     const prompt = setupPrompt(sourceCopy, languageMap.get(language));
 
-    console.log(prompt);
+    log(2, `Prompt: ${prompt}`);
 
     // Prompt the ChatGPT API to translate
     const completion = await getTranslation(configuration, prompt);
@@ -49,17 +48,22 @@ async function init() {
     const outputFile = options.output.replace("{{lang}}", language);
     const data = completion.data.choices[0].message.content;
 
-    console.log(`ChatGPT response: ${data}`);
+    log(1, `Raw ChatGPT response: ${data}`);
     writeFile(outputFile, data);
   }
 }
 
+function increaseVerbosity(_, previous) {
+    return previous + 1;
+  }
+
 function setupCLI() {
   program
-    .requiredOption("-i, --input <file>")
-    .requiredOption("-o, --output <file>")
-    .requiredOption("-l, --languages <list>")
-    .requiredOption("-s, --secret <string>");
+    .requiredOption("-i, --input <file>", 'Source JSON file to translate. Only accepts a single file')
+    .requiredOption("-o, --output <file>", 'Output pattern to save translations to. Can use {{lang}} as a placeholder for a target language')
+    .requiredOption("-l, --languages <list>", 'Comma separated list of languages to translate to. Supports de,es,it')
+    .requiredOption("-s, --secret <string>", 'OpenAI API secret key')
+    .option('-v, --verbose', 'verbosity that can be increased', increaseVerbosity, 0)
 
   program.parse();
 }
@@ -73,7 +77,8 @@ function setupLanguageMap() {
 }
 
 function setupPrompt(sourceCopy, language) {
-  console.log(`Currently translating: ${language}...`);
+  log(1, `Currently translating: ${language}...`);
+
   return `I want you to act as an English to ${language} translator that can process JSON input and provide JSON output in the same structure. You will receive JSON data containing English text, and your task is to translate the text to ${language} while maintaining the structure of the JSON. Your responses should only include the translated text within the JSON structure. Please ensure that the JSON keys remain unchanged. Avoid providing additional explanations or altering the JSON structure. Here is the JSON input: ${JSON.stringify(
     JSON.parse(sourceCopy)
   )}
@@ -81,7 +86,7 @@ function setupPrompt(sourceCopy, language) {
 }
 
 async function getTranslation(configuration, prompt) {
-  console.log("Calling Chat GPT...");
+  log(1, "Calling Chat GPT...");
   // Init the OpenAI SDK
   const openai = new OpenAIApi(configuration);
   return await openai.createChatCompletion({
@@ -98,6 +103,14 @@ async function getTranslation(configuration, prompt) {
 
 function writeFile(destination, data) {
   fs.writeFileSync(destination, JSON.stringify(JSON.parse(data), null, 2));
+}
+
+function log(requiredVerbosity, ...logs) {
+    const options = program.opts();
+
+    if (options.verbose >= requiredVerbosity) {
+        console.log(...logs);
+    }
 }
 
 module.exports = {
