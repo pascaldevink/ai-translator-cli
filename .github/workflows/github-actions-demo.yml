@@ -34,8 +34,12 @@ jobs:
 
       # Steps to check what json files have changed
       - name: Get all changed *.json file(s)
-        id: changed-files
+        id: changed-files-excluded
         uses: tj-actions/changed-files@v36
+        with:
+          files: |
+            **/*.json
+          files_ignore: es*
 
       - name: Run step if any *.json file(s) have changed
         if: steps.changed-files.outputs.any_changed == 'true'
