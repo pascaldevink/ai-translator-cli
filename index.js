@@ -24,12 +24,12 @@ function init() {
   const encoded = encode(sourceCopy);
   const maxTokens = 2500;
 
-  log(3, `Number of tokens in source copy: ${encoded.length}`);
-  log(4, encode)
+  debug(3, `Number of tokens in source copy: ${encoded.length}`);
+  raw(encode)
   const decoded = decode(encoded);
-  log(4, "We can decode encoded tokens back into:\n", decoded);
+  raw("We can decode encoded tokens back into:\n", decoded);
 
-  log(1, "Translating JSON to different languages...");
+  output("Translating JSON to different languages...");
 
   for (const languageIndex in languages) {
     const chunks = encoded.length > maxTokens ? splitJSON(JSON.parse(sourceCopy), 1500) : [JSON.parse(sourceCopy)]
@@ -40,33 +40,35 @@ function init() {
       const chunk = chunks[chunkIndex]
       const prompt = setupPrompt(chunk, languageMap.get(language));
 
-      log(2, `Prompt: ${prompt}`);
+      debug(2, `Prompt: ${prompt}`);
 
       // Prompt the ChatGPT API to translate
       const completionPromise = getTranslation(configuration, prompt);
       completionPromise.then((response) => {
-          log(4, response);
+          raw(response);
           // Output the translated result(s)
           const data = response.data.choices[0].message.content;
-          log(1, `Raw ChatGPT response: ${data}`);
+          info(`Raw ChatGPT response: ${data}`);
       })
       promises.push(completionPromise)
     }
 
     // Stich back together the chunks
     Promise.all(promises).then((responses) => {
-      log(2, 'Merging responses together again...')
-      const output = responses.map((response) => {
+      debug('Merging responses together again...')
+      const result = responses.map((response) => {
         const data = JSON.parse(response.data.choices[0].message.content);
         return data
       }).reduce((mergedJSON, chunk) => {
         return Object.assign(mergedJSON, chunk);
       }, {});
 
-      log(2, `Merged output: ${JSON.stringify(output, null, 2)}`)
+      debug(`Merged output: ${JSON.stringify(result, null, 2)}`)
       // Save result json to new file
       const outputFile = options.output.replace("{{lang}}", language);
-      writeFile(outputFile, output);
+      writeFile(outputFile, result);
+
+      output("Done translating JSON to different languages.")
     })
   }
 }
@@ -127,14 +129,14 @@ function splitJSON(jsonObj, maxTokens) {
   )
 
   outcome.forEach((chunk) => {
-    log(3, `Encoded chunk length: ${encode(JSON.stringify(chunk)).length}`)
+    debug(`Encoded chunk length: ${encode(JSON.stringify(chunk)).length}`)
   })
 
   return outcome;
 }
 
 function setupPrompt(sourceCopy, language) {
-  log(1, `Currently translating: ${language}...`);
+  info(`Currently translating: ${language}...`);
 
   return `I want you to act as an English to ${language} translator that can process JSON input and provide JSON output in the same structure. You will receive JSON data containing English text, and your task is to translate the text to ${language} while maintaining the structure of the JSON. Your responses should only include the translated text within the JSON structure. Please ensure that the JSON keys remain unchanged. Avoid providing additional explanations or altering the JSON structure. Here is the JSON input: ${JSON.stringify(sourceCopy)}
 	`;
@@ -165,6 +167,22 @@ function log(requiredVerbosity, ...logs) {
     if (options.verbose >= requiredVerbosity) {
         console.log(...logs);
     }
+}
+
+function output(...logs) {
+  log(0, ...logs)
+}
+
+function info(...logs) {
+  log(1, ...logs)
+}
+
+function debug(...logs) {
+  log(2, ...logs)
+}
+
+function raw(...logs) {
+  log(3, ...logs)
 }
 
 module.exports = {
