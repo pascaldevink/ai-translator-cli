@@ -8,7 +8,7 @@ const { Configuration, OpenAIApi } = require("openai");
 const { program } = require("commander");
 const fs = require("fs");
 
-async function init() {
+function init() {
   setupCLI();
   const options = program.opts();
 
@@ -34,6 +34,7 @@ async function init() {
   log(3, "We can decode encoded tokens back into:\n", decoded);
 
   log(1, "Translating JSON to different languages...");
+
   for (const languageIndex in languages) {
     const language = languages[languageIndex];
     const prompt = setupPrompt(sourceCopy, languageMap.get(language));
@@ -41,15 +42,17 @@ async function init() {
     log(2, `Prompt: ${prompt}`);
 
     // Prompt the ChatGPT API to translate
-    const completion = await getTranslation(configuration, prompt);
+    const completionPromise = getTranslation(configuration, prompt);
+    completionPromise.then((response) => {
+        log(4, response);
+        // Output the translated result(s)
+        const data = response.data.choices[0].message.content;
+        log(1, `Raw ChatGPT response: ${data}`);
 
-    // Output the translated result(s)
-    // Save result json to new file
-    const outputFile = options.output.replace("{{lang}}", language);
-    const data = completion.data.choices[0].message.content;
-
-    log(1, `Raw ChatGPT response: ${data}`);
-    writeFile(outputFile, data);
+        // Save result json to new file
+        const outputFile = options.output.replace("{{lang}}", language);
+        writeFile(outputFile, data);
+    })
   }
 }
 
@@ -85,11 +88,10 @@ function setupPrompt(sourceCopy, language) {
 	`;
 }
 
-async function getTranslation(configuration, prompt) {
-  log(1, "Calling Chat GPT...");
+function getTranslation(configuration, prompt) {
   // Init the OpenAI SDK
   const openai = new OpenAIApi(configuration);
-  return await openai.createChatCompletion({
+  return openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [
       {
