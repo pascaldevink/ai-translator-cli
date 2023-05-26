@@ -41,7 +41,7 @@ jobs:
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
-            node index -i $file -o {{lang}}_$file -l es -s ${{ secrets.OPENAI_SECRET }}
+            node index -i $file -o "{{lang}}_$file" -l es -s ${{ secrets.OPENAI_SECRET }}
           done
 
       - uses: stefanzweifel/git-auto-commit-action@v4
