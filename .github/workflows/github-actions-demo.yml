@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       # Steps to check what json files have changed
-      - name: Get all changed *.js file(s) or any file in the static folder excluding the docs folder
+      - name: Get all changed *.json file(s)
         id: changed-files-excluded
         uses: tj-actions/changed-files@v36
         with:
