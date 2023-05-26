@@ -93,6 +93,7 @@ function setupLanguageMap() {
   languageMap.set("es", "Spanish");
   languageMap.set("it", "Italian");
   languageMap.set("de", "German");
+  languageMap.set("nl", "Dutch");
   return languageMap;
 }
 
