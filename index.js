@@ -22,17 +22,17 @@ function init() {
   const languageMap = setupLanguageMap();
 
   const encoded = encode(sourceCopy);
-  const maxTokens = 3000;
+  const maxTokens = 2500;
 
   log(3, `Number of tokens in source copy: ${encoded.length}`);
-  log(3, encode)
+  log(4, encode)
   const decoded = decode(encoded);
-  log(3, "We can decode encoded tokens back into:\n", decoded);
+  log(4, "We can decode encoded tokens back into:\n", decoded);
 
   log(1, "Translating JSON to different languages...");
 
   for (const languageIndex in languages) {
-    const chunks = encoded.length > maxTokens ? splitJSON(JSON.parse(sourceCopy), maxTokens) : [sourceCopy]
+    const chunks = encoded.length > maxTokens ? splitJSON(JSON.parse(sourceCopy), 1500) : [JSON.parse(sourceCopy)]
     const language = languages[languageIndex];
     const promises = []
 
@@ -53,8 +53,9 @@ function init() {
       promises.push(completionPromise)
     }
 
-    // @todo: Stich back together the chunks
+    // Stich back together the chunks
     Promise.all(promises).then((responses) => {
+      log(2, 'Merging responses together again...')
       const output = responses.map((response) => {
         const data = JSON.parse(response.data.choices[0].message.content);
         return data
@@ -62,7 +63,7 @@ function init() {
         return Object.assign(mergedJSON, chunk);
       }, {});
 
-      log(2, `Merged output: ${output}`)
+      log(2, `Merged output: ${JSON.stringify(output, null, 2)}`)
       // Save result json to new file
       const outputFile = options.output.replace("{{lang}}", language);
       writeFile(outputFile, output);
@@ -100,21 +101,42 @@ function splitJSON(jsonObj, maxTokens) {
     const chunk = `{"${key}": ${JSON.stringify(value)}}`
     const encodedChunk = encode(chunk);
     if (encodedChunk.length > maxTokens) {
-      throw new Error('JSON exceeding max token length.')
+      throw new Error(`JSON exceeding max token length.\nThis is the violating JSON:\n${chunk}`)
     }
 
-    chunks.push(chunk)
+    chunks.push(JSON.parse(chunk))
   }
 
-  return chunks;
+  const outcome = chunks.reduce(
+    (accumulator, value) => {
+      if (accumulator.length == 0) {
+        accumulator.push(value)
+        return accumulator
+      }
+
+      const tokensOfLastIndex = encode(JSON.stringify(accumulator[accumulator.length - 1]))
+      if (tokensOfLastIndex.length > maxTokens) {
+        accumulator.push(value)
+      } else {
+        Object.assign(accumulator[accumulator.length - 1], value)
+      }
+      
+      return accumulator
+    },
+    []
+  )
+
+  outcome.forEach((chunk) => {
+    log(3, `Encoded chunk length: ${encode(JSON.stringify(chunk)).length}`)
+  })
+
+  return outcome;
 }
 
 function setupPrompt(sourceCopy, language) {
   log(1, `Currently translating: ${language}...`);
 
-  return `I want you to act as an English to ${language} translator that can process JSON input and provide JSON output in the same structure. You will receive JSON data containing English text, and your task is to translate the text to ${language} while maintaining the structure of the JSON. Your responses should only include the translated text within the JSON structure. Please ensure that the JSON keys remain unchanged. Avoid providing additional explanations or altering the JSON structure. Here is the JSON input: ${JSON.stringify(
-    JSON.parse(sourceCopy)
-  )}
+  return `I want you to act as an English to ${language} translator that can process JSON input and provide JSON output in the same structure. You will receive JSON data containing English text, and your task is to translate the text to ${language} while maintaining the structure of the JSON. Your responses should only include the translated text within the JSON structure. Please ensure that the JSON keys remain unchanged. Avoid providing additional explanations or altering the JSON structure. Here is the JSON input: ${JSON.stringify(sourceCopy)}
 	`;
 }
 
