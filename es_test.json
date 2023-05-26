@@ -2,11 +2,6 @@
   "bookAvailability": {
     "geolocation": {
       "summary": "No disponible en tu región"
-    },
-    "scheduled": {
-      "summary": "Disponible hasta {{date}}"
-    },
-    "unavailableLongSummary": "Ya no está disponible",
-    "unavailableShortSummary": "No disponible"
+    }
   }
 }
