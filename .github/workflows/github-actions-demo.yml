@@ -41,20 +41,8 @@ jobs:
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
+            node index -i $file -o {{lang}}_$file -l es -s ${{ secrets.OPENAI_SECRET }}
           done
-
-      - name: Get changed files in the current folder
-        id: changed-files-specific
-        uses: tj-actions/changed-files@v36
-        with:
-          files: /*.json
-
-      - name: Run translation if any json file(s) in the docs folder change
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
-        run: |
-          echo "One or more files in the docs folder has changed."
-          echo "List all the files that have changed: ${{ steps.changed-files-specific.outputs.all_changed_files }}"
-          node index -i test.json -o {{lang}}_test.json -l es -s ${{ secrets.OPENAI_SECRET }}
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
