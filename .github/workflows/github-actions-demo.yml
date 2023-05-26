@@ -33,15 +33,20 @@ jobs:
         run: npm ci
 
       # Steps to check what json files have changed
-      - name: Get changed files
-        id: changed-files
+      - name: Get all changed *.js file(s) or any file in the static folder excluding the docs folder
+        id: changed-files-excluded
         uses: tj-actions/changed-files@v36
+        with:
+          files: |
+            **/*.json
+          files_ignore: es*
 
-      - name: List all changed files
+      - name: Run step if any *.json file(s) have changed
+        if: steps.changed-files-excluded.outputs.any_changed == 'true'
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
-            node index -i $file -o "{{lang}}_$file" -l es -s ${{ secrets.OPENAI_SECRET }}
+            node index -i $file -o {{lang}}_$file -l es -s ${{ secrets.OPENAI_SECRET }}
           done
 
       - uses: stefanzweifel/git-auto-commit-action@v4
