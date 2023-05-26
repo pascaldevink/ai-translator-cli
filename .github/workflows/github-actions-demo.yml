@@ -28,7 +28,7 @@ jobs:
         run: npm ci
 
       - name: Run Translation CLI
-        run: node index -i test.json -o {{lang}}_test.json -l es ${{ secrets.OPENAI_API_KEY }}
+        run: node index -i test.json -o {{lang}}_test.json -l es -s ${{ secrets.OPENAI_API_KEY }}
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
