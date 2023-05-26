@@ -22,36 +22,50 @@ function init() {
   const languageMap = setupLanguageMap();
 
   const encoded = encode(sourceCopy);
-  const max_token = 3000;
-  if (encoded.length > max_token) {
-    throw new Error(
-      `JSON exceeding max token length. encoded length: ${encoded.length}`
-    );
-  }
+  const maxTokens = 3000;
 
   log(3, `Number of tokens in source copy: ${encoded.length}`);
+  log(3, encode)
   const decoded = decode(encoded);
   log(3, "We can decode encoded tokens back into:\n", decoded);
 
   log(1, "Translating JSON to different languages...");
 
   for (const languageIndex in languages) {
+    const chunks = encoded.length > maxTokens ? splitJSON(JSON.parse(sourceCopy), maxTokens) : [sourceCopy]
     const language = languages[languageIndex];
-    const prompt = setupPrompt(sourceCopy, languageMap.get(language));
+    const promises = []
 
-    log(2, `Prompt: ${prompt}`);
+    for (const chunkIndex in chunks) {
+      const chunk = chunks[chunkIndex]
+      const prompt = setupPrompt(chunk, languageMap.get(language));
 
-    // Prompt the ChatGPT API to translate
-    const completionPromise = getTranslation(configuration, prompt);
-    completionPromise.then((response) => {
-        log(4, response);
-        // Output the translated result(s)
-        const data = response.data.choices[0].message.content;
-        log(1, `Raw ChatGPT response: ${data}`);
+      log(2, `Prompt: ${prompt}`);
 
-        // Save result json to new file
-        const outputFile = options.output.replace("{{lang}}", language);
-        writeFile(outputFile, data);
+      // Prompt the ChatGPT API to translate
+      const completionPromise = getTranslation(configuration, prompt);
+      completionPromise.then((response) => {
+          log(4, response);
+          // Output the translated result(s)
+          const data = response.data.choices[0].message.content;
+          log(1, `Raw ChatGPT response: ${data}`);
+      })
+      promises.push(completionPromise)
+    }
+
+    // @todo: Stich back together the chunks
+    Promise.all(promises).then((responses) => {
+      const output = responses.map((response) => {
+        const data = JSON.parse(response.data.choices[0].message.content);
+        return data
+      }).reduce((mergedJSON, chunk) => {
+        return Object.assign(mergedJSON, chunk);
+      }, {});
+
+      log(2, `Merged output: ${output}`)
+      // Save result json to new file
+      const outputFile = options.output.replace("{{lang}}", language);
+      writeFile(outputFile, output);
     })
   }
 }
@@ -79,6 +93,22 @@ function setupLanguageMap() {
   return languageMap;
 }
 
+function splitJSON(jsonObj, maxTokens) {
+  const chunks = [];
+
+  for (const [key, value] of Object.entries(jsonObj)) {
+    const chunk = `{"${key}": ${JSON.stringify(value)}}`
+    const encodedChunk = encode(chunk);
+    if (encodedChunk.length > maxTokens) {
+      throw new Error('JSON exceeding max token length.')
+    }
+
+    chunks.push(chunk)
+  }
+
+  return chunks;
+}
+
 function setupPrompt(sourceCopy, language) {
   log(1, `Currently translating: ${language}...`);
 
@@ -104,7 +134,7 @@ function getTranslation(configuration, prompt) {
 }
 
 function writeFile(destination, data) {
-  fs.writeFileSync(destination, JSON.stringify(JSON.parse(data), null, 2));
+  fs.writeFileSync(destination, JSON.stringify(data, null, 2));
 }
 
 function log(requiredVerbosity, ...logs) {
